@@ -192,4 +192,12 @@ extension XCConfigCrypt {
     }
 }
 
+extension XCConfigCrypt {
+    typealias ValueModificationBlock = (String) -> (String)
+    static func process(lines: [String], withValueModificationBlock: ValueModificationBlock) -> [String] {
+        // TODO:  move processing in here
+        return lines
+    }
+}
+
 XCConfigCrypt.main()
