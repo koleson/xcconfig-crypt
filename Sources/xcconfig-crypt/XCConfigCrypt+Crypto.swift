@@ -1,10 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by Kiel Oleson on 11/30/20.
-//
-
 import Foundation
 import ArgumentParser
 import Crypto
