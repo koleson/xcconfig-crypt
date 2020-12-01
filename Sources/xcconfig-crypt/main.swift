@@ -162,6 +162,13 @@ extension XCConfigCrypt {
             
             let encryptedFile = encryptedLines.joined(separator: "\n")
             print("done processing - output string is:\n\n\(encryptedFile)")
+            let encryptedFileData = encryptedFile.data(using: .utf8)
+            
+            guard FileManager.default.createFile(atPath: inputFilename + ".enc", contents: encryptedFileData) else {
+                fatalError("could not create output file")
+            }
+            
+            print("wrote file successfully!")
         }
     }
     
