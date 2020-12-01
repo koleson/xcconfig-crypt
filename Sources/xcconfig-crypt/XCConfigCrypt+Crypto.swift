@@ -15,7 +15,7 @@ extension XCConfigCrypt {
         @Argument(help: "Input file to be encrypted")
         var inputFilename: String
         
-        @Argument(help: "the key with which to encrypt the values")
+        @Option(name: .shortAndLong, help: "the key with which to encrypt the values")
         var key: String
         
         static let KeyValueSeparator = " = "
@@ -75,11 +75,11 @@ extension XCConfigCrypt {
         @Argument(help: "Encrypted file to be decrypted")
         var encryptedFilename: String
         
-        @Argument(help: "the key with which to decrypt the values")
+        @Option(name: .shortAndLong, help: "the key with which to decrypt the values")
         var key: String
         
         func run() throws {
-            print("decrypting file \(encryptedFilename)s")
+            print("decrypting file \(encryptedFilename)")
             
             do {
                 guard let keyData = Data(base64Encoded: key) else {
