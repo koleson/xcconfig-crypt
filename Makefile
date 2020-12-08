@@ -7,12 +7,13 @@ build:
 	swift build -c release --disable-sandbox
 
 install: build
-	install ".build/release/xcconfig-crypt" "$(bindir)"
+        @install -d "$(bindir)"
+	@install ".build/release/xcconfig-crypt" "$(bindir)"
 
 uninstall:
-	rm -rf "$(bindir)/xcconfig-crypt"
+	@rm -rf "$(bindir)/xcconfig-crypt"
 
 clean:
-	rm -rf .build
+	@rm -rf .build
 
 .PHONY: build install uninstall clean
