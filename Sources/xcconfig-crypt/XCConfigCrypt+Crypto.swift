@@ -11,17 +11,13 @@ extension XCConfigCrypt {
         @Option(name: .shortAndLong, help: "the key with which to encrypt the values")
         var key: String
         
+        @Flag(name: .shortAndLong, help: "trim the key string to the first 256 bits if it is longer than 256 bits")
+        var trimKey: Bool = false
+        
         static let KeyValueSeparator = " = "
         
         func run() throws {
-            guard key.count >= 32 else {
-                fatalError("key must be 32 characters/256 bits or longer")
-            }
-            guard let keyData = key.data(using: .utf8) else {
-                fatalError("could not decode key string :(")
-            }
-            
-            let key = SymmetricKey(data: keyData)
+            let parsedKey = XCConfigCrypt.parseKey(forString: key, trim: trimKey)
             
             var lines: [String]
             do {
@@ -40,7 +36,7 @@ extension XCConfigCrypt {
                     
                     let nonce = try AES.GCM.Nonce(data: Array(repeating: 0, count: 12))
                     
-                    let sealedBox = try AES.GCM.seal(plaintextUTF8Data, using: key, nonce: nonce)
+                    let sealedBox = try AES.GCM.seal(plaintextUTF8Data, using: parsedKey, nonce: nonce)
                     
                     guard let sealedBoxCipherText = sealedBox.combined?.base64EncodedString() else {
                         fatalError("could not get sealed box cipher text for value \(value)")
@@ -70,16 +66,14 @@ extension XCConfigCrypt {
         @Option(name: .shortAndLong, help: "the key with which to decrypt the values")
         var key: String
         
+        @Flag(name: .shortAndLong, help: "trim the key string to the first 256 bits if it is longer than 256 bits")
+        var trimKey: Bool = false
+        
         func run() throws {
             print("decrypting file \(encryptedFilename)")
             
             do {
-                guard let keyData = Data(base64Encoded: key) else {
-                    fatalError("could not base64-decode key string :(")
-                }
-                
-                /// basic tests below
-                let key = SymmetricKey(data: keyData)
+                let parsedKey = XCConfigCrypt.parseKey(forString: key, trim: trimKey)
                 
                 let lines = try XCConfigCrypt.lines(fromFileNamed: encryptedFilename)
                 let decryptedLines = XCConfigCrypt.process(lines: lines) { (encryptedValue) -> (String) in
@@ -88,7 +82,7 @@ extension XCConfigCrypt {
                             fatalError("couldn't base64 decode encrypted data in encrypted value \(encryptedValue)")
                         }
                         let sealedBox = try AES.GCM.SealedBox(combined: encryptedData)
-                        let recoveredData = try AES.GCM.open(sealedBox, using: key, authenticating: Data())
+                        let recoveredData = try AES.GCM.open(sealedBox, using: parsedKey, authenticating: Data())
                         guard let recoveredPlaintext = String(data: recoveredData, encoding: .utf8) else {
                             fatalError("could not recover utf8 text from decrypted data")
                         }
@@ -104,5 +98,30 @@ extension XCConfigCrypt {
                 fatalError("could not read encrypted file")
             }
         }
+    }
+}
+
+
+extension XCConfigCrypt {
+    static func parseKey(forString string: String, trim: Bool = false) -> SymmetricKey {
+        // TODO:  extract trim / parse key
+        guard (trim && string.count >= 32) || (string.count == 32) else {
+            fatalError("key must be 32 characters/256 bits exactly (or more if --trim-key specified)")
+        }
+        
+        let trimmedKey: String
+        if trim {
+            trimmedKey = String(string.prefix(32))
+        } else {
+            trimmedKey = string
+        }
+        
+        guard let keyData = trimmedKey.data(using: .utf8) else {
+            fatalError("could not decode key string :(")
+        }
+        
+        let key = SymmetricKey(data: keyData)
+        
+        return key
     }
 }
