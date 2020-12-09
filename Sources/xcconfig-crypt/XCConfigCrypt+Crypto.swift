@@ -14,15 +14,14 @@ extension XCConfigCrypt {
         static let KeyValueSeparator = " = "
         
         func run() throws {
-            assert(key.count == 32, "Key must be 32 ascii characters")
-            
-            guard let keyData = Data(base64Encoded: key) else {
-                fatalError("could not base64-decode key string :(")
+            guard key.count >= 32 else {
+                fatalError("key must be 32 characters/256 bits or longer")
+            }
+            guard let keyData = key.data(using: .utf8) else {
+                fatalError("could not decode key string :(")
             }
             
             let key = SymmetricKey(data: keyData)
-            //let key = SymmetricKey(size: .bits256)
-            
             
             var lines: [String]
             do {
